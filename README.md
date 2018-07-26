@@ -29,3 +29,5 @@ Usage
 Please cite our paper if you use this tool. 
 Razlaw, J., Droeschel, D., Holz, D., & Behnke, S. (2015, September). [Evaluation of registration methods for sparse 3D laser scans][1]. In Mobile Robots (ECMR), 2015 European Conference on (pp. 1-7). IEEE.
 [1]: http://www.ais.uni-bonn.de/papers/ECMR_2015_Razlaw.pdf
+
+用mrpt保存的点云存在速度慢的情况，不清楚是格式问题导致还是，不过一般用的时候最好手动把外点去除
