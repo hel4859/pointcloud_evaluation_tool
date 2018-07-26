@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : MeanMapEntropy.cpp
-// Author      : David Droeschel & Jan Razlaw
-// Version     :
+// Author      : David Droeschel & Jan Razlaw &He Lei
+// Version     : 2.0
 // Copyright   :
 // Description : Calculates Mean Map Entropy and Mean Plane Variance of a point cloud
 //============================================================================
@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 #include <pcl/common/geometry.h>
@@ -69,7 +70,6 @@ double computePlaneVariance( pcl::PointCloud< PointT >::Ptr cloud ){
 	// fit plane using RANSAC
 	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
 	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-
 	pcl::SACSegmentation< PointT > seg;
 	seg.setOptimizeCoefficients (true);
 	seg.setModelType (pcl::SACMODEL_PLANE);
@@ -77,6 +77,7 @@ double computePlaneVariance( pcl::PointCloud< PointT >::Ptr cloud ){
 	seg.setDistanceThreshold (0.005);
 	seg.setInputCloud (cloud);
 	seg.segment (*inliers, *coefficients);
+
 
 	if( inliers->indices.size() < 3 ){
 		PCL_ERROR ("Could not estimate a planar model for the given subset of points.");
@@ -110,14 +111,33 @@ int main( int argc, char** argv ) {
 	double entropySum = 0.f;
 	double planeVarianceSum = 0.f;
 	int lonelyPoints = 0;
-
+    std::vector<int> fileIndices;
+    int pointcloud_size=0;
 	// get pointcloud
-	std::vector<int> fileIndices = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
-	if (pcl::io::loadPCDFile< PointT> (argv[fileIndices[0]], *inputCloud) == -1)
+
+	if( (pcl::console::parse_file_extension_argument (argc, argv, ".pcd")).size()!=0)
 	{
-		PCL_ERROR ("Couldn't read file.\n");
+		fileIndices = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
+		if (pcl::io::loadPCDFile< PointT> (argv[fileIndices[0]], *inputCloud) == -1)
+		{
+			PCL_ERROR ("Couldn't read file.\n");
+			return (-1);
+		}
+	}
+	else if ( (pcl::console::parse_file_extension_argument (argc, argv, ".ply")).size()!=0)
+	{
+		fileIndices = pcl::console::parse_file_extension_argument (argc, argv, ".ply");
+		if (pcl::io::loadPLYFile< PointT> (argv[fileIndices[0]], *inputCloud) == -1)
+		{
+			PCL_ERROR ("Couldn't read file.\n");
+			return (-1);
+		}
+	}else
+	{
+		PCL_ERROR ("just support ply and pcd file.\n");
 		return (-1);
 	}
+	
 
 	// get parameters if given
 	int stepSize = 1;
@@ -224,7 +244,7 @@ int main( int argc, char** argv ) {
 	std::cout << "Mean Plane Variance is " << meanPlaneVariance << std::endl;
 
 	std::cout << "Used " << entropyTimer.getTime() << " milliseconds to compute values for " << inputCloud->points.size() << " points." << std::endl;
-
+    std::cout<< "the useful points size is " << outputCloud->points.size() << std::endl;
 	int pointsActuallyUsed = (inputCloud->points.size() / stepSize) - lonelyPoints;
 	
 	if( punishSolitaryPoints && (pointsActuallyUsed < lonelyPoints) ){
@@ -233,7 +253,7 @@ int main( int argc, char** argv ) {
 
 	// save output cloud in the directory of the input cloud
 	std::string saveDestination = argv[fileIndices[0]];
-	saveDestination.replace(saveDestination.find_last_of("."),1,"_entropy.");
+	saveDestination.replace(saveDestination.find_last_of("."),4,"_entropy.pcd");
 	if ( outputCloud->size() > 0 )
 		pcl::io::savePCDFileASCII (saveDestination, *outputCloud );
 	else
