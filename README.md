@@ -17,7 +17,7 @@ make
 Usage
 -----
 ```
-./mean_map_entropy path/to/pointcloud.pcd [-stepsize int] [-radius double] [-punishSolitaryPoints] [-minNeighbors int]
+./mean_map_entropy path/to/pointcloud.pcd或者ply [-stepsize int] [-radius double] [-punishSolitaryPoints] [-minNeighbors int]
 ```
 * **stepsize:** stepsize used iterating through the pointcloud (default: 1)
 * **radius:** radius used for search for neighboring points (default: 0.3)
